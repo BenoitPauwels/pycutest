@@ -66,8 +66,7 @@ def get_available_parameters(problemName):
     except:
         raise RuntimeError("SIFDecode crashed")
     if return_code != 0:
-        message = "SIFDecode failed with return code {}: \"{}\""\
-                  .format(return_code, sifdecode_output)
+        message = "SIFDecode failed with return code {}".format(return_code)
         print("Warning: {}".format(message))
 
     # Parse the output of SIFDecode
