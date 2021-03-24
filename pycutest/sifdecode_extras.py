@@ -25,20 +25,7 @@ def print_available_sif_params(problemName):
     # Call sifdecode
     spawnOK=True
     try:
-        # Start sifdecode
-        p = subprocess.Popen(
-            [get_sifdecoder_path()] + ['-show'] + [problemName],
-            universal_newlines=True,
-            stdout=subprocess.PIPE, stderr=subprocess.STDOUT
-        )
-
-        # Collect output
-        messages=p.stdout.read()
-        p.stdout.close()
-
-        # Now wait for the process to finish. If we don't wait p might get garbage-collected before the
-        # actual process finishes which can result in a crash of the interpreter.
-        retcode=p.wait()
+        retcode, messages = _sifdecode_show(problemName)
 
         # Check return code. Nonzero return code means that something has gone bad.
         # if retcode!=0:
@@ -55,28 +42,97 @@ def print_available_sif_params(problemName):
     print("Parameters available for problem %s:" % problemName)
     for line in messages.split('\n'):
         if '=' in line:
-            if 'uncommented' in line:
-                comment = None
-            else:
-                comment = line[line.find('comment:') + len('comment:'):].strip()
-            default = 'default value' in line
-            vals = line.split()
-            var_name, value = vals[0].split('=')
-            if vals[1] == '(IE)':
-                dtype = 'int'
-                value = int(value)
-            elif vals[1] == '(RE)':
-                dtype = 'float'
-                value = float(value)
-            else:
-                dtype = 'unknown type'
-                value = None
+            var_name, value, dtype, comment, default = _parse_sifdecode_show_line(line)
             if comment is not None:
                 print("%s = %g (%s, %s) %s" % (var_name, value, dtype, comment, '[default]' if default else ''))
             else:
                 print("%s = %g (%s) %s" % (var_name, value, dtype, '[default]' if default else ''))
     print("End of parameters for problem %s" % problemName)
     return
+
+
+def get_available_N(problemName):
+    """
+    Return the available values of parameter N for a given problem.
+
+    :param str problemName: the name of the CUTEst problem
+    :return: the available values of N
+    :rtype: list(int)
+    """
+    # Call SIFDecode
+    try:
+        return_code, sifdecode_output = _sifdecode_show(problemName)
+    except:
+        raise RuntimeError("SIFDecode crashed")
+    if return_code != 0:
+        raise RuntimeError("SIFDecode failed")
+
+    # Parse the output of SIFDecode
+    available_n = []
+    for line in sifdecode_output.split('\n'):
+        if '=' in line:
+            var_name, value, _, _, _ = _parse_sifdecode_show_line(line)
+            if var_name == "N":
+                available_n.append(value)
+
+    return available_n
+
+
+def _sifdecode_show(problemName):
+    """
+    Call "sifdecode -show" on a given problem and collect to print out available parameters.
+    This function is OS dependent. Currently works only for Linux and MacOS.
+
+    :param str problemName: CUTEst problem name
+    :returns: the return code of sifdecode, the output of sifdecode
+    :rtype: tuple(bool, str)
+    """
+    # Start sifdecode
+    p = subprocess.Popen(
+        [get_sifdecoder_path()] + ['-show'] + [problemName],
+        universal_newlines=True,
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+    )
+
+    # Collect output
+    messages = p.stdout.read()
+    p.stdout.close()
+
+    # Now wait for the process to finish. If we don't wait p might get garbage-collected before the
+    # actual process finishes which can result in a crash of the interpreter.
+    retcode = p.wait()
+
+    return retcode, messages
+
+
+def _parse_sifdecode_show_line(line):
+    """
+    Parse a line of the output of 'sifdecode -show'.
+    :param str line: the line to parse
+    :returns: the name of the parameter,
+              the value of the parameter,
+              the type of the parameter,
+              the comment on the parameter value,
+              whether the parameter value is the default one
+    :rtype: tuple(str, int or float or None, str, str or None, bool)
+    """
+    if 'uncommented' in line:
+        comment = None
+    else:
+        comment = line[line.find('comment:') + len('comment:'):].strip()
+    default = 'default value' in line
+    vals = line.split()
+    var_name, value = vals[0].split('=')
+    if vals[1] == '(IE)':
+        dtype = 'int'
+        value = int(value)
+    elif vals[1] == '(RE)':
+        dtype = 'float'
+        value = float(value)
+    else:
+        dtype = 'unknown type'
+        value = None
+    return var_name, value, dtype, comment, default
 
 
 # Problem classifications
