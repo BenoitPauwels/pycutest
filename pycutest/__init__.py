@@ -9,8 +9,10 @@ __all__ += ['__version__']
 from .build_interface import import_problem, clear_cache, all_cached_problems
 __all__ += ['import_problem', 'clear_cache', 'all_cached_problems']
 
-from .sifdecode_extras import print_available_sif_params, problem_properties, find_problems
-__all__ += ['print_available_sif_params', 'problem_properties', 'find_problems']
+from .sifdecode_extras import (print_available_sif_params, problem_properties,
+                               find_problems, get_available_parameters)
+__all__ += ['print_available_sif_params', 'problem_properties', 'find_problems',
+            'get_available_parameters']
 
 from .problem_class import CUTEstProblem
 __all__ += ['CUTEstProblem']

@@ -11,7 +11,8 @@ from glob import iglob
 
 from .system_paths import get_sifdecoder_path, get_mastsif_path
 
-__all__ = ['print_available_sif_params', 'problem_properties', 'find_problems']
+__all__ = ['print_available_sif_params', 'problem_properties', 'find_problems',
+           'get_available_parameters']
 
 
 def print_available_sif_params(problemName):
@@ -51,13 +52,13 @@ def print_available_sif_params(problemName):
     return
 
 
-def get_available_N(problemName):
+def get_available_parameters(problemName):
     """
-    Return the available values of parameter N for a given problem.
+    Return the available parameters values for a given problem.
 
     :param str problemName: the name of the CUTEst problem
-    :return: the available values of N
-    :rtype: list(int)
+    :return: the available parameters values
+    :rtype: dict[str, list(int)]
     """
     # Call SIFDecode
     try:
@@ -65,17 +66,22 @@ def get_available_N(problemName):
     except:
         raise RuntimeError("SIFDecode crashed")
     if return_code != 0:
-        raise RuntimeError("SIFDecode failed")
+        message = "SIFDecode failed with return code {}: \"{}\""\
+                  .format(return_code, sifdecode_output)
+        print("Warning: {}".format(message))
 
     # Parse the output of SIFDecode
-    available_n = []
+    available_parameters = dict()
     for line in sifdecode_output.split('\n'):
         if '=' in line:
             var_name, value, _, _, _ = _parse_sifdecode_show_line(line)
-            if var_name == "N":
-                available_n.append(value)
+            if var_name not in available_parameters:
+                available_parameters[var_name] = list()
+            param_values = available_parameters[var_name]
+            param_values.append(value)
+            param_values.sort()
 
-    return available_n
+    return available_parameters
 
 
 def _sifdecode_show(problemName):
