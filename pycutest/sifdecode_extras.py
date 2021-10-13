@@ -302,3 +302,21 @@ def find_problems(objective=None, constraints=None, regular=None,
         nameList.append(name)
 
     return nameList
+
+
+def get_classification(
+        problemName  # type: str
+):  # type: (...) -> str
+    """Get the classification code of a problem.
+
+    :param problemName: The name of the problem.
+
+    :return: The classification code of the problem.
+    """
+    fileName = os.path.join(get_mastsif_path(), '{}.SIF'.format(problemName))
+    pattern = re.compile('\\s*\\*\\s*classification\\s*', re.IGNORECASE)
+    with open(fileName, 'r') as file:
+        for line in file:
+            match = pattern.match(line)
+            if match:
+                return line[match.end():].strip()
