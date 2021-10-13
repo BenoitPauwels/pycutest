@@ -782,3 +782,19 @@ class CUTEstProblem(object):
                 stats[s] = stats[s] - self.init_stats[s]
 
         return stats
+
+    def has_equality_constraint(self):  # type: (...) -> bool
+        """Check whether the problem has at least one equality constraint.
+
+        :return: True if the problem has at least one equality constraint,
+            False otherwise.
+        """
+        return self.is_eq_cons is not None and True in self.is_eq_cons
+
+    def has_inequality_constraint(self):  # type: (...) -> bool
+        """Check whether the problem has at least one inequality constraint.
+
+        :return: True if the problem has at least one inequality constraint,
+            False otherwise.
+        """
+        return self.is_eq_cons is not None and False in self.is_eq_cons
