@@ -783,6 +783,13 @@ class CUTEstProblem(object):
 
         return stats
 
+    def is_bounded(self):  # type: (...) -> bool
+        """Check whether all the variables of the problem are bounded.
+
+        :return: True if all the variables of the problem are bounded.
+        """
+        return self.bl.min() > -1e20 and self.bu.max() < 1e20
+
     def has_equality_constraint(self):  # type: (...) -> bool
         """Check whether the problem has at least one equality constraint.
 
